@@ -1,0 +1,16 @@
+company: Walmart
+steps:
+  - action: click
+    selector: "#apply-button"
+  - action: fill
+    selector: "#first-name"
+    value: "{{first_name}}"
+  - action: fill
+    selector: "#last-name"
+    value: "{{last_name}}"
+  - action: select
+    selector: "#job-type"
+    value: "Full-time"
+questions:
+  - question: "Why do you want to work here?"
+    answer: "I have a passion for customer service."
