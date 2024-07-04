@@ -10,7 +10,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Constants
-WAIT_TIME = 30  # Common wait time.
+WAIT_TIME = 300  # Common wait time.
 SLEEP_TIME = 5  # Common sleep time.
 SHORT_SLEEP_TIME = 2  # Common short sleep time.
 
@@ -46,12 +46,16 @@ class WalmartJobApplication:
 
         # Pressing the Sign-In button manually because can't find it's source using HTML code.
         password_field.send_keys(Keys.TAB)
+
+        # Waiting a little to let the system know that it is a user-input and not a machine doing DOS attack.
+        # sleep(SLEEP_TIME)
+
         WebDriverWait(driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="signInSubmitButton"]'))
-        ).send_keys(Keys.SPACE)
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-automation-id="click_filter"]'))
+        ).click()
 
         # Wait for login to complete
-        WebDriverWait(driver, WAIT_TIME).until(EC.url_contains('login'))
+        WebDriverWait(driver, WAIT_TIME).until(EC.url_contains('userHome')) # Scrum NOTE: Remove in future or place it outside this function and find better way to determine whether the user has been successfully logged in.
 
         sleep(SLEEP_TIME) # Waiting a little for letting the system login
 
@@ -129,6 +133,7 @@ class WalmartJobApplication:
 
         # Find matching resume
         resume_found = False
+        self.resume_file = str()
 
         # List all resumes in the Resume folder
         for resume_file in os.listdir(self.resume_folder):
@@ -186,15 +191,41 @@ class WalmartJobApplication:
     def choose_personal_details(self, driver):
         #region Referral Option Selection
 
+        #region Reaching to Search Bar
+
+        # Waiting till the body of the page renders.
+        WebDriverWait(driver, WAIT_TIME).until(
+            EC.url_contains('job')
+        )
+
+        # Waiting for the back button to render.
+        WebDriverWait(driver, WAIT_TIME).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-back-button"]'))
+        )
+
+        # Focusing on the `Back to Job Posting` option for reliable focus tabbing.
+        body = WebDriverWait(driver, WAIT_TIME).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="css-dsowhc"]'))
+        )
+
+        # Tabbing to gain focus of the search bar.
+        body.send_keys(Keys.TAB)
+        body.send_keys(Keys.TAB)
+
+        # Pressing ENTER key to open the menu.
+        body.send_keys(Keys.ENTER)
+
+        #endregion
+
         # Select the Referral option
         referral_option = WebDriverWait(driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((By.ID, 'input-2'))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-automation-label="Referral"]'))
         )
         referral_option.click()
 
         # Select the first radio button ("I know someone who works here")
         first_radio_button = WebDriverWait(driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[type="radio"][data-automation-id="radioBtn"]'))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-automation-id="promptOption"]'))
         )
         first_radio_button.click()
 
@@ -220,13 +251,24 @@ class WalmartJobApplication:
 
         #endregion
 
-    def delete_missing_resume_log(self):
-        if os.path.exists(self.log_path):
-            os.remove(self.log_path)
+    def delete_missing_resume_log(self, path):
+        if os.path.exists(path):
+            os.remove(path)
 
     def run_application_process(self):
+        # Delete the old logs.
+        self.delete_missing_resume_log(self.log_path)
+
         driver = self.login()
-        self.search_jobs(driver)
+
+        #region Debug
+        # self.search_jobs(driver)
+        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Joliette%2C-QC/XMLNAME--CAN--Prpos-au-dchargement_R-1913549-1/apply/autofillWithResume?q=Stock')
+        self.resume_file = 'Stock Unloader Associate.pdf'
+        self.uploading_resume(driver)
+        self.choose_personal_details(driver)
+        return None
+        #endregion
         
         # Iterate through job listings and open each job in a new tab
         job_listings = WebDriverWait(driver, WAIT_TIME).until(
@@ -244,9 +286,6 @@ class WalmartJobApplication:
 
             # Opening the tab in the new window.
             self.open_job_in_new_tab(driver, job_title, job_link)
-
-        # After application process, delete the missing resume log
-        self.delete_missing_resume_log()
 
         # Close the driver session
         driver.quit()
