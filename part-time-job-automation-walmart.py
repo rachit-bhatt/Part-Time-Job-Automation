@@ -53,10 +53,13 @@ class WalmartJobApplication:
         # Wait for login to complete
         WebDriverWait(driver, WAIT_TIME).until(EC.url_contains('login'))
 
+        sleep(SLEEP_TIME) # Waiting a little for letting the system login
+
         return driver
 
     def search_jobs(self, driver):
         driver.get(self.jobs_url)
+
         # Step 1: Click on the Filter button
         filter_button = WebDriverWait(driver, WAIT_TIME).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="distanceLocation"]'))
@@ -130,7 +133,7 @@ class WalmartJobApplication:
         # List all resumes in the Resume folder
         for resume_file in os.listdir(self.resume_folder):
             if resume_file.endswith('.pdf'):
-                normalized_resume_name = re.sub(r'\.pdf$', '', resume_file, flags=re.IGNORECASE).strip().lower()
+                normalized_resume_name = re.sub(r'\.pdf$', '', resume_file, flags = re.IGNORECASE).strip().lower()
                 if normalized_job_title == normalized_resume_name:
                     resume_found = True
                     self.resume_file = resume_file
@@ -164,23 +167,28 @@ class WalmartJobApplication:
                 log_file.write(log_message)
 
     def uploading_resume(self, driver):
-        # Upload the resume file
-        upload_element = WebDriverWait(driver, WAIT_TIME).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="file-upload-input-ref"]')))
-        upload_element.send_keys(os.path.join(self.resume_folder, self.resume_file))
+        try:
+            # Upload the resume file
+            upload_element = WebDriverWait(driver, WAIT_TIME).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="file-upload-input-ref"]')))
+            upload_element.send_keys(os.path.join(os.getcwd(), self.resume_folder, self.resume_file))
 
-        # Wait until the resume is uploaded
-        WebDriverWait(driver, WAIT_TIME).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation-id="file-upload-item"]')))
+            # Wait until the resume is uploaded
+            WebDriverWait(driver, WAIT_TIME).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div[data-automation-id="file-upload-item"]')))
 
-        # Click the "Continue" button
-        continue_button = WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-next-button"]')))
-        continue_button.click()
+            # Click the "Continue" button
+            continue_button = WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-next-button"]')))
+            continue_button.click()
+
+        except TimeoutError:
+            # Skipping the step to upload the resume.
+            pass
 
     def choose_personal_details(self, driver):
         #region Referral Option Selection
 
         # Select the Referral option
         referral_option = WebDriverWait(driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-automation-label="Referral"]'))
+            EC.element_to_be_clickable((By.ID, 'input-2'))
         )
         referral_option.click()
 
@@ -218,7 +226,7 @@ class WalmartJobApplication:
 
     def run_application_process(self):
         driver = self.login()
-        # self.search_jobs(driver)
+        self.search_jobs(driver)
         
         # Iterate through job listings and open each job in a new tab
         job_listings = WebDriverWait(driver, WAIT_TIME).until(
