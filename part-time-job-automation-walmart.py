@@ -50,9 +50,15 @@ class WalmartJobApplication:
         # Waiting a little to let the system know that it is a user-input and not a machine doing DOS attack.
         # sleep(SLEEP_TIME)
 
-        WebDriverWait(driver, WAIT_TIME).until(
+        sign_in_button = WebDriverWait(driver, WAIT_TIME).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, 'div[data-automation-id="click_filter"]'))
-        ).click()
+        )
+
+        # Clicking the button thrice as on pressing it once sometimes doesn't work.
+        sign_in_button.click()
+        sign_in_button.send_keys(Keys.SPACE)
+        sleep(SHORT_SLEEP_TIME) # Waiting for a natural delay.
+        sign_in_button.send_keys(Keys.SPACE)
 
         # Wait for login to complete
         WebDriverWait(driver, WAIT_TIME).until(EC.url_contains('userHome')) # Scrum NOTE: Remove in future or place it outside this function and find better way to determine whether the user has been successfully logged in.
@@ -204,16 +210,25 @@ class WalmartJobApplication:
         )
 
         # Focusing on the `Back to Job Posting` option for reliable focus tabbing.
-        body = WebDriverWait(driver, WAIT_TIME).until(
+        back_button = WebDriverWait(driver, WAIT_TIME).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[class="css-dsowhc"]'))
         )
 
         # Tabbing to gain focus of the search bar.
-        body.send_keys(Keys.TAB)
-        body.send_keys(Keys.TAB)
+        back_button.send_keys(Keys.TAB)
+
+        # Use JavaScript to get the currently focused element and simulate pressing the Enter key
+        script = """
+        var focusedElement = document.activeElement;
+        focusedElement.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'}));
+        focusedElement.dispatchEvent(new KeyboardEvent('keypress', {key: 'Enter'}));
+        focusedElement.dispatchEvent(new KeyboardEvent('keyup', {key: 'Enter'}));
+        return focusedElement;
+        """
+        focused_element = driver.execute_script(script)
 
         # Pressing ENTER key to open the menu.
-        body.send_keys(Keys.ENTER)
+        focused_element.send_keys(Keys.ENTER)
 
         #endregion
 
@@ -251,6 +266,10 @@ class WalmartJobApplication:
 
         #endregion
 
+        #region Other Personal Details from Resume
+
+        #endregion
+
     def delete_missing_resume_log(self, path):
         if os.path.exists(path):
             os.remove(path)
@@ -263,7 +282,7 @@ class WalmartJobApplication:
 
         #region Debug
         # self.search_jobs(driver)
-        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Joliette%2C-QC/XMLNAME--CAN--Prpos-au-dchargement_R-1913549-1/apply/autofillWithResume?q=Stock')
+        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
         self.resume_file = 'Stock Unloader Associate.pdf'
         self.uploading_resume(driver)
         self.choose_personal_details(driver)
