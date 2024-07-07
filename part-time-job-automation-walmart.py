@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import configparser
 from time import sleep
 from datetime import datetime
@@ -28,6 +29,8 @@ class WalmartJobApplication:
         self.location = 'CA/M2J 1S5/North York'  # Default location for job search
         self.log_path = 'Resume/Resume Log.txt'
         self.resume_folder = 'Resume'
+
+        self.json_path = self.config['json']['json_path']
 
     def login(self):
         driver = webdriver.Edge(executable_path = self.driver_path)
@@ -254,7 +257,7 @@ class WalmartJobApplication:
         #region Referral Email
 
         # Wait for the text box to appear
-        referral_text_box = WebDriverWait(driver, 10).until(
+        referral_text_box = WebDriverWait(driver, WAIT_TIME).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="referral"]'))
         )
 
@@ -268,7 +271,83 @@ class WalmartJobApplication:
 
         #region Other Personal Details from Resume
 
+        self.fill_form(driver, self.load_json(self.json_path).values()['personal_information'])
+
         #endregion
+
+    def fill_experiences_and_languages(self, driver):
+        pass
+
+    def fill_application_questions_1(self, driver):
+        
+        # WebDriverWait(driver, WAIT_TIME).until(
+        #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
+        # )
+
+        # Waiting for the page to load the content.
+        sleep(SLEEP_TIME)
+
+        body = driver.find_element(By.TAG_NAME, 'body')
+        body.send_keys(Keys.TAB)
+        sleep(SHORT_SLEEP_TIME)
+        body.send_keys('Y')
+        sleep(SHORT_SLEEP_TIME)
+
+        sleep(SLEEP_TIME)
+
+    def fill_application_questions_2(self, driver):
+        pass
+
+    #region Automative Form Filling
+
+    def load_json(self, file_path):
+        with open(file_path, 'r') as file:
+            return json.load(file)
+
+    def fill_text_field(self, driver, data):
+        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
+        element.clear()
+        element.send_keys(data['value'])
+
+    def fill_checkbox_field(self, driver, data):
+        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
+        if data['value'] != element.is_selected():
+            element.click()
+
+    def fill_dropdown_field(self, driver, data):
+        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
+        element.click()
+        dropdown_option = driver.find_element(By.XPATH, f"//option[@value='{data['value']}']")
+        dropdown_option.click()
+
+    def save_and_continue(self, driver):
+        WebDriverWait(driver, WAIT_TIME).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-next-button"]'))
+        ).click()
+
+    def fill_form(self, driver, fields):
+        for field in fields.values():
+            element = WebDriverWait(driver, WAIT_TIME).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]'))
+            )
+            if field['type'] == 'text':
+                element.clear()
+                element.send_keys(field['value'])
+            elif field['type'] == 'dropdown':
+                element.click()
+                option = WebDriverWait(driver, WAIT_TIME).until(
+                    EC.presence_of_element_located((By.XPATH, f"//option[text()='{ field['value'] }']"))
+                )
+                option.click()
+            elif field['type'] == 'radio':
+                element.click()
+            elif field['type'] == 'checkbox':
+                if not element.is_selected():
+                    element.click()
+
+        self.save_and_continue()
+
+    #endregion
 
     def delete_missing_resume_log(self, path):
         if os.path.exists(path):
@@ -282,10 +361,11 @@ class WalmartJobApplication:
 
         #region Debug
         # self.search_jobs(driver)
-        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
-        self.resume_file = 'Stock Unloader Associate.pdf'
-        self.uploading_resume(driver)
-        self.choose_personal_details(driver)
+        # driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
+        # self.resume_file = 'Stock Unloader Associate.pdf'
+        # self.uploading_resume(driver)
+        # self.choose_personal_details(driver)
+        self.fill_application_questions_1(driver)
         return None
         #endregion
         
