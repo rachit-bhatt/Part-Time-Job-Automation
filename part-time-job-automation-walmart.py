@@ -5,13 +5,14 @@ import configparser
 from time import sleep
 from datetime import datetime
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Constants
-WAIT_TIME = 300  # Common wait time.
+WAIT_TIME = 30  # Common wait time.
 SLEEP_TIME = 5  # Common sleep time.
 SHORT_SLEEP_TIME = 2  # Common short sleep time.
 
@@ -193,7 +194,7 @@ class WalmartJobApplication:
             continue_button = WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-next-button"]')))
             continue_button.click()
 
-        except TimeoutError:
+        except TimeoutException:
             # Skipping the step to upload the resume.
             pass
 
@@ -207,10 +208,13 @@ class WalmartJobApplication:
             EC.url_contains('job')
         )
 
-        # Waiting for the back button to render.
-        WebDriverWait(driver, WAIT_TIME).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-back-button"]'))
-        )
+        try:
+            # Waiting for the back button to render.
+            WebDriverWait(driver, WAIT_TIME).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-back-button"]'))
+            )
+        except TimeoutException:
+            pass # Possible that sometimes we don't have `Back` button on this page so we pass this step.
 
         # Focusing on the `Back to Job Posting` option for reliable focus tabbing.
         back_button = WebDriverWait(driver, WAIT_TIME).until(
@@ -271,12 +275,25 @@ class WalmartJobApplication:
 
         #region Other Personal Details from Resume
 
-        self.fill_form(driver, self.load_json(self.json_path).values()['personal_information'])
+        json_data = self.load_json(self.json_path)
+        self.fill_form(driver, json_data['personal_information'])
 
         #endregion
 
     def fill_experiences_and_languages(self, driver):
-        pass
+        
+        # Waiting for the page to load the content.
+        sleep(SLEEP_TIME)
+
+        json_data = self.load_json(self.json_path)
+
+        experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
+
+        if len(experience_elements) != len(list(json_data['employment_history'].values())):
+
+            # Remove all and then add one-by-one.
+            for div_tags in experience_elements:
+                pass
 
     def fill_application_questions_1(self, driver):
         
@@ -304,41 +321,38 @@ class WalmartJobApplication:
         with open(file_path, 'r') as file:
             return json.load(file)
 
-    def fill_text_field(self, driver, data):
-        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
-        element.clear()
-        element.send_keys(data['value'])
-
-    def fill_checkbox_field(self, driver, data):
-        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
-        if data['value'] != element.is_selected():
-            element.click()
-
-    def fill_dropdown_field(self, driver, data):
-        element = driver.find_element(By.CSS_SELECTOR, f"[data-automation-id='{data['location']}']")
-        element.click()
-        dropdown_option = driver.find_element(By.XPATH, f"//option[@value='{data['value']}']")
-        dropdown_option.click()
-
     def save_and_continue(self, driver):
         WebDriverWait(driver, WAIT_TIME).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="bottom-navigation-next-button"]'))
         ).click()
 
     def fill_form(self, driver, fields):
+        wait = WebDriverWait(driver, WAIT_TIME)
+
         for field in fields.values():
-            element = WebDriverWait(driver, WAIT_TIME).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]'))
-            )
+            element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
+
             if field['type'] == 'text':
                 element.clear()
                 element.send_keys(field['value'])
-            elif field['type'] == 'dropdown':
-                element.click()
-                option = WebDriverWait(driver, WAIT_TIME).until(
-                    EC.presence_of_element_located((By.XPATH, f"//option[text()='{ field['value'] }']"))
-                )
-                option.click()
+            elif field['type'] == 'dropdown': # NOTE: Using different/specialized/customized logic for dropdowns at moment only but will optimize in the future.
+                # Wait for the dropdown button to be present and click it to open the dropdown menu
+                dropdown_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'button[data-automation-id="{ field["location"] }"]')))
+                dropdown_button.click()
+
+                # Wait for the dropdown options to be visible and locate the option for Ontario
+                ontario_option = wait.until(EC.element_to_be_clickable((By.XPATH, f'//li[@data-value="{ field["key"] }"]/div[contains(text(), "{ field["value"] }")]')))
+
+                # Click the Ontario option to select it
+                ontario_option.click()
+
+                #region Code for the normal dropdowns
+                # element.click()
+                # option = WebDriverWait(driver, WAIT_TIME).until(
+                #     EC.presence_of_element_located((By.XPATH, f"//option[text()='{ field['value'] }']"))
+                # )
+                # option.click()
+                #endregion
             elif field['type'] == 'radio':
                 element.click()
             elif field['type'] == 'checkbox':
@@ -361,11 +375,13 @@ class WalmartJobApplication:
 
         #region Debug
         # self.search_jobs(driver)
-        # driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
-        # self.resume_file = 'Stock Unloader Associate.pdf'
-        # self.uploading_resume(driver)
-        # self.choose_personal_details(driver)
+        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
+        self.resume_file = 'Stock Unloader Associate.pdf'
+        self.uploading_resume(driver)
+        self.choose_personal_details(driver)
+        self.fill_experiences_and_languages(driver)
         self.fill_application_questions_1(driver)
+        self.fill_application_questions_2(driver)
         return None
         #endregion
         
