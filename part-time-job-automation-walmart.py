@@ -333,18 +333,18 @@ class WalmartJobApplication:
             element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
 
             if field['type'] == 'text':
-                element.clear()
-                element.send_keys(field['value'])
+                # element.clear()
+                # element.send_keys(field['value'])
+
+                # Set the value of the text box using JavaScript
+                driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+
             elif field['type'] == 'dropdown': # NOTE: Using different/specialized/customized logic for dropdowns at moment only but will optimize in the future.
                 # Wait for the dropdown button to be present and click it to open the dropdown menu
-                dropdown_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'button[data-automation-id="{ field["location"] }"]')))
-                dropdown_button.click()
+                wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'button[data-automation-id="{ field["location"] }"]'))).click()
 
-                # Wait for the dropdown options to be visible and locate the option for Ontario
-                ontario_option = wait.until(EC.element_to_be_clickable((By.XPATH, f'//li[@data-value="{ field["key"] }"]/div[contains(text(), "{ field["value"] }")]')))
-
-                # Click the Ontario option to select it
-                ontario_option.click()
+                # Wait for the dropdown options to be visible and locate the option for State.
+                wait.until(EC.element_to_be_clickable((By.XPATH, f'//li[@data-value="{ field["key"] }"]/div[contains(text(), "{ field["value"] }")]'))).click()
 
                 #region Code for the normal dropdowns
                 # element.click()
