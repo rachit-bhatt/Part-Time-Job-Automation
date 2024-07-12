@@ -293,13 +293,17 @@ class WalmartJobApplication:
     def fill_experiences_and_languages(self, driver):
         
         # Waiting for the page to load the content.
+        WebDriverWait(driver, WAIT_TIME).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'h2[class="css-1j9bnzb"]'))
+        )
+
         sleep(SLEEP_TIME)
 
         json_data = self.load_json(self.json_path)
 
         experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
-        if len(experience_elements) != len(list(json_data['employment_history'].values())):
+        if len(experience_elements) != len(json_data['employment_history']):
 
             # Remove all and then add one-by-one.
             for div_tags in experience_elements:
