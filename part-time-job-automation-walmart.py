@@ -7,7 +7,7 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -260,13 +260,23 @@ class WalmartJobApplication:
 
         #region Referral Email
 
+        # Get the referral value from the config file
+        referral_value = self.config.get('walmart', 'referral_email')
+
         # Wait for the text box to appear
         referral_text_box = WebDriverWait(driver, WAIT_TIME).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="referral"]'))
         )
 
-        # Get the referral value from the config file
-        referral_value = self.config.get('walmart', 'referral_email')
+        referral_text_box.clear()
+
+        del referral_text_box
+
+        sleep(SHORT_SLEEP_TIME)
+
+        referral_text_box = WebDriverWait(driver, WAIT_TIME).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="referral"]'))
+        )
 
         # Input the referral value into the text box
         referral_text_box.send_keys(referral_value)
@@ -329,15 +339,31 @@ class WalmartJobApplication:
     def fill_form(self, driver, fields):
         wait = WebDriverWait(driver, WAIT_TIME)
 
+        #region Clears the text in one-go.
+
         for field in fields.values():
             element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
 
             if field['type'] == 'text':
-                # element.clear()
-                # element.send_keys(field['value'])
+                element.clear()
+                del element
 
-                # Set the value of the text box using JavaScript
-                driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+        #endregion
+
+        #region Fills the data in the empty containers.
+
+        for field in fields.values():
+            element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
+
+            if field['type'] == 'text':
+                try:
+                    element.send_keys(field['value'])
+
+                    # Set the value of the text box using JavaScript
+                    driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+
+                except StaleElementReferenceException as sere:
+                    print(sere, sere.stacktrace())
 
             elif field['type'] == 'dropdown': # NOTE: Using different/specialized/customized logic for dropdowns at moment only but will optimize in the future.
                 # Wait for the dropdown button to be present and click it to open the dropdown menu
@@ -359,7 +385,9 @@ class WalmartJobApplication:
                 if not element.is_selected():
                     element.click()
 
-        self.save_and_continue()
+        #endregion
+
+        self.save_and_continue(driver)
 
     #endregion
 
