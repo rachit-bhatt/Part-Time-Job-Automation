@@ -62,7 +62,10 @@ class WalmartJobApplication:
         sign_in_button.click()
         sign_in_button.send_keys(Keys.SPACE)
         sleep(SHORT_SLEEP_TIME) # Waiting for a natural delay.
-        sign_in_button.send_keys(Keys.SPACE)
+        try: # Preventing to crash when the login is already done.
+            sign_in_button.send_keys(Keys.SPACE) # This was only in the case when the system would not login on the first try.
+        except StaleElementReferenceException as sere:
+            print(sere)
 
         # Wait for login to complete
         WebDriverWait(driver, WAIT_TIME).until(EC.url_contains('userHome')) # Scrum NOTE: Remove in future or place it outside this function and find better way to determine whether the user has been successfully logged in.
@@ -297,6 +300,8 @@ class WalmartJobApplication:
             EC.presence_of_element_located((By.CSS_SELECTOR, 'h2[class="css-1j9bnzb"]'))
         )
 
+        # Waiting for hte page-content to be loaded as the changes will take a while to be loaded.
+        # This depends on the internet speed on the system/network running.
         sleep(SLEEP_TIME)
 
         json_data = self.load_json(self.json_path)
@@ -307,7 +312,19 @@ class WalmartJobApplication:
 
             # Remove all and then add one-by-one.
             for div_tags in experience_elements:
-                pass
+
+                # Clicking the delete button for each of the job experiences already present on the web-page.
+                delete_button = WebDriverWait(driver, WAIT_TIME).until(
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="panel-set-delete-button"]'))
+                )
+                
+                # delete_button.click()
+
+        # Iterate over each experience to fill it in the form.
+        for experience_index in range(len(experience_elements)):
+            self.fill_form(driver, json_data['employment_history'][experience_index])
+
+        self.save_and_continue(driver)
 
     def fill_application_questions_1(self, driver):
         
@@ -365,6 +382,18 @@ class WalmartJobApplication:
 
                     # Set the value of the text box using JavaScript
                     driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+
+                except StaleElementReferenceException as sere:
+                    print(sere)
+
+            elif field['type'] == 'paragraph': # This type is used to write a whole paragraph and also includes the code-snippets.
+                try:
+                    # Iterating over each element of the list to be written.
+                    for item in field['items']:
+                        element.send_keys(item)
+
+                        # Set the value of the text box using JavaScript
+                        driver.execute_script(f"arguments[0].value = '{ item }';", element)
 
                 except StaleElementReferenceException as sere:
                     print(sere, sere.stacktrace())
