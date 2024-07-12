@@ -321,8 +321,8 @@ class WalmartJobApplication:
                 # delete_button.click()
 
         # Iterate over each experience to fill it in the form.
-        for experience_index in range(len(experience_elements)):
-            self.fill_form(driver, json_data['employment_history'][experience_index])
+        for experience_details in json_data['employment_history']:
+            self.fill_form(driver, experience_details)
 
         self.save_and_continue(driver)
 
@@ -365,7 +365,8 @@ class WalmartJobApplication:
         for field in fields.values():
             element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
 
-            if field['type'] == 'text':
+            if field['type'] == 'text' or \
+            field['type'] == 'paragraph':
                 element.clear()
                 del element
 
@@ -384,19 +385,17 @@ class WalmartJobApplication:
                     driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
 
                 except StaleElementReferenceException as sere:
-                    print(sere)
+                    print('StaleElementReferenceException - Text:\n', sere)
 
             elif field['type'] == 'paragraph': # This type is used to write a whole paragraph and also includes the code-snippets.
                 try:
                     # Iterating over each element of the list to be written.
                     for item in field['items']:
                         element.send_keys(item)
-
-                        # Set the value of the text box using JavaScript
-                        driver.execute_script(f"arguments[0].value = '{ item }';", element)
+                        element.send_keys(Keys.ENTER)
 
                 except StaleElementReferenceException as sere:
-                    print(sere, sere.stacktrace())
+                    print('StaleElementReferenceException - Paragraph:\n', sere)
 
             elif field['type'] == 'dropdown': # NOTE: Using different/specialized/customized logic for dropdowns at moment only but will optimize in the future.
                 # Wait for the dropdown button to be present and click it to open the dropdown menu
@@ -417,6 +416,8 @@ class WalmartJobApplication:
             elif field['type'] == 'checkbox':
                 if not element.is_selected():
                     element.click()
+            
+            del element
 
         #endregion
 
