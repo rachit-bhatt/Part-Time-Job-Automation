@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Constants
-WAIT_TIME = 30  # Common wait time.
+WAIT_TIME = 10  # Common wait time.
 SLEEP_TIME = 5  # Common sleep time.
 SHORT_SLEEP_TIME = 2  # Common short sleep time.
 
@@ -293,7 +293,7 @@ class WalmartJobApplication:
 
         #endregion
 
-    def fill_experiences_and_languages(self, driver):
+    def fill_experiences(self, driver):
         
         # Waiting for the page to load the content.
         WebDriverWait(driver, WAIT_TIME).until(
@@ -306,24 +306,48 @@ class WalmartJobApplication:
 
         json_data = self.load_json(self.json_path)
 
+        # Fetching all of the previous experiences' objects already available in the form.
         experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
         if len(experience_elements) != len(json_data['employment_history']):
 
             # Remove all and then add one-by-one.
-            for div_tags in experience_elements:
+            for _ in experience_elements:
 
                 # Clicking the delete button for each of the job experiences already present on the web-page.
-                delete_button = WebDriverWait(driver, WAIT_TIME).until(
+                WebDriverWait(driver, WAIT_TIME).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="panel-set-delete-button"]'))
-                )
-                
-                # delete_button.click()
+                ).click()
+
+            sleep(SHORT_SLEEP_TIME) # Waiting for the page to get loaded with the fresh UI.
+
+            # Adding number of experiences forms as the number of for experiences.
+            for _ in experience_elements:
+
+                WebDriverWait(driver, WAIT_TIME).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, 'button[data-automation-id="Add"], button[data-automation-id="Add Another"]'))
+                ).click()
+
+            # Again, getting the objects to manipuate the data to the latest sources/ids.
+            experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
         # Iterate over each experience to fill it in the form.
-        for experience_details in json_data['employment_history']:
-            self.fill_form(driver, experience_details)
+        for experience_index in range(len(json_data['employment_history'])):
+            sleep(SHORT_SLEEP_TIME) # Waiting for a short break for letting the UI be loaded.
+            self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
 
+    def fill_languages(self, driver):
+        pass
+
+    def fill_experiences_and_languages(self, driver):
+        
+        # Filling the experiences.
+        self.fill_experiences(driver)
+
+        # Filling the languages.
+        self.fill_languages(driver)
+
+        # Submitting the information.
         self.save_and_continue(driver)
 
     def fill_application_questions_1(self, driver):
@@ -381,8 +405,12 @@ class WalmartJobApplication:
                 try:
                     element.send_keys(field['value'])
 
-                    # Set the value of the text box using JavaScript
-                    driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+                    try:
+                        # Set the value of the text box using JavaScript
+                        driver.execute_script(f"arguments[0].value = '{ field['value'] }';", element)
+                    except AttributeError as ae:
+                        # When the `driver` doesn't support `execute_script()` functionality.
+                        print('AttributeError - Text:\n', ae)
 
                 except StaleElementReferenceException as sere:
                     print('StaleElementReferenceException - Text:\n', sere)
@@ -416,6 +444,14 @@ class WalmartJobApplication:
             elif field['type'] == 'checkbox':
                 if not element.is_selected():
                     element.click()
+
+            elif field['type'] == 'date':
+                element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]')))
+
+                if field['value'] != 'present':
+                    element.send_keys(field['value'])
+                else:
+                    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'currentlyWorkHere'))).click()
             
             del element
 
