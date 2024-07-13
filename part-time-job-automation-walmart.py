@@ -322,18 +322,19 @@ class WalmartJobApplication:
             sleep(SHORT_SLEEP_TIME) # Waiting for the page to get loaded with the fresh UI.
 
             # Adding number of experiences forms as the number of for experiences.
-            for _ in experience_elements:
+            for _ in json_data['employment_history']:
 
                 WebDriverWait(driver, WAIT_TIME).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'button[data-automation-id="Add"], button[data-automation-id="Add Another"]'))
                 ).click()
+
+            sleep(SHORT_SLEEP_TIME) # Waiting for a short break for letting the UI be loaded.
 
             # Again, getting the objects to manipuate the data to the latest sources/ids.
             experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
         # Iterate over each experience to fill it in the form.
         for experience_index in range(len(json_data['employment_history'])):
-            sleep(SHORT_SLEEP_TIME) # Waiting for a short break for letting the UI be loaded.
             self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
 
     def fill_languages(self, driver):
@@ -451,7 +452,11 @@ class WalmartJobApplication:
                 if field['value'] != 'present':
                     element.send_keys(field['value'])
                 else:
-                    wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'currentlyWorkHere'))).click()
+                    check_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="currentlyWorkHere"]')))
+
+                    # Check the check-box if not selected.
+                    if not check_box.is_selected():
+                        check_box.click()
             
             del element
 
