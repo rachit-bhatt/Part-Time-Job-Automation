@@ -72,6 +72,9 @@ class WalmartJobApplication:
 
         sleep(SLEEP_TIME) # Waiting a little for letting the system login
 
+        # Storing the driver for executing a JavaScript on the page.
+        self.executable_driver = driver
+
         return driver
 
     def search_jobs(self, driver):
@@ -337,6 +340,9 @@ class WalmartJobApplication:
         for experience_index in range(len(json_data['employment_history'])):
             self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
 
+    def execute_java_script(self, java_script):
+        self.executable_driver.execute_script(java_script)
+
     def fill_languages(self, driver):
         pass
 
@@ -452,11 +458,22 @@ class WalmartJobApplication:
                 if field['value'] != 'present':
                     element.send_keys(field['value'])
                 else:
-                    check_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="currentlyWorkHere"]')))
+                    query = 'input[data-automation-id="currentlyWorkHere"]'
+                    # check_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, query)))
 
                     # Check the check-box if not selected.
-                    if not check_box.is_selected():
-                        check_box.click()
+                    # if not check_box.is_selected():
+                        # check_box.click()
+
+                    self.execute_java_script(f'''
+                        var checkbox = document.querySelector('{ query }');
+                        if (checkbox && !checkbox.checked) {{
+                            checkbox.click();
+                            console.log('Checkbox is now checked!');
+                        }} else {{
+                            console.log('Checkbox was already checked.');
+                        }}
+                    ''')
             
             del element
 
