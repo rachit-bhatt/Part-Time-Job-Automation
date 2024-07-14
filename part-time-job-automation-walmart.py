@@ -372,26 +372,9 @@ class WalmartJobApplication:
         #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
         # )
 
-        # Waiting for the page to load the content.
-        sleep(SLEEP_TIME)
+        json_data = self.load_json(self.json_path)
 
-        body = driver.find_element(By.TAG_NAME, 'body')
-
-        sleep(SLEEP_TIME)
-
-        #region Question 1
-
-        self.tab_and_type(body, 'Y')
-
-        #endregion
-
-        #region Question 2
-
-        self.tab_and_type(body, 'O')
-
-        #endregion
-
-        # sleep(SLEEP_TIME)
+        self.fill_form(driver, json_data['application_questions_1'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
@@ -416,12 +399,15 @@ class WalmartJobApplication:
         #region Clears the text in one-go.
 
         for field in fields.values():
-            element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
 
             if field['type'] == 'text' or \
-            field['type'] == 'paragraph':
-                element.clear()
-                del element
+                field['type'] == 'paragraph':
+                try:
+                    element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
+                    element.clear()
+                    del element
+                except TimeoutException as te: # When the text-box is not found or will take time to render.
+                    print('TimeoutException:\n', te) # Ignore it and move further.
 
         #endregion
 
@@ -516,6 +502,12 @@ class WalmartJobApplication:
                     #endregion
 
                 element.send_keys(field['value'])
+
+            elif field['type'] == 'qna':
+
+                input_element = element.parent.get_attribute((By.TAG_NAME, 'input'))
+
+                driver.execute_script("arguments[0].value = arguments[1];", input_element, field['value'])
             
             del element
 
