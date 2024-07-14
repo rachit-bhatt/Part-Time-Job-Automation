@@ -382,8 +382,8 @@ class WalmartJobApplication:
         # Getting focused element to answer the questions based on key-press events.
         active_element = driver.switch_to.active_element
 
-        for question_instance in json_data['application_questions'].values():
-            active_element = self.tab_and_type(driver, active_element, question_instance['value'])
+        for question_instance in json_data['application_questions_1'].values():
+            active_element = self.tab_and_type(driver, active_element, question_instance['context'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
@@ -394,15 +394,39 @@ class WalmartJobApplication:
         sleep(SLEEP_TIME)
 
         # Locate the checkboxes
-        checkboxes = driver.find_elements_by_css_selector("input[type='checkbox']")
+        # checkboxes = driver.find_elements_by_css_selector("input[type='checkbox']")
 
         # Simulate key presses (Tab to move focus, Space to toggle checkboxes)
-        for checkbox in checkboxes:
-            if "None" not in checkbox.get_attribute("aria-label"):
-                checkbox.send_keys(Keys.TAB)
-                sleep(SHORT_SLEEP_TIME)  # A few seconds delay
-                checkbox.send_keys(Keys.SPACE)
-                sleep(SHORT_SLEEP_TIME)  # A few seconds delay
+        # for checkbox in checkboxes:
+        #     label_text = checkbox.find_element_by_xpath("./following-sibling::label").text
+        #     if "None" not in label_text:
+        #         checkbox.send_keys(Keys.TAB)
+        #         sleep(SHORT_SLEEP_TIME)  # A few seconds delay
+        #         checkbox.send_keys(Keys.SPACE)
+        #         sleep(SHORT_SLEEP_TIME)  # A few seconds delay
+
+        json_data = self.load_json(self.json_path)
+
+        # Getting focused element to answer the questions based on key-press events.
+        active_element = driver.switch_to.active_element
+        sleep(SHORT_SLEEP_TIME)
+        active_element.send_keys(Keys.TAB) # Going to the ghost element to focus on the first check-box using the function.
+        sleep(SHORT_SLEEP_TIME)
+
+        for week_key, question_instance in json_data['application_questions_2'].items():
+
+            # Switching between dropdown and checkboxes.
+            if week_key != "Overall":
+
+                for day_data in question_instance.values():
+                    active_element = self.tab_and_type(driver, active_element, (Keys.SPACE if day_data else Keys.TAB))
+
+                # Tabbing to move to the next day.
+                active_element.send_keys(Keys.TAB)
+                sleep(SHORT_SLEEP_TIME)
+
+            else:
+                self.tab_and_type(driver, active_element, question_instance['context'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
