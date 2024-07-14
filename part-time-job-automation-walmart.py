@@ -278,7 +278,7 @@ class WalmartJobApplication:
 
         del referral_text_box
 
-        sleep(SHORT_SLEEP_TIME)
+        sleep(SHORT_SLEEP_TIME) # Waiting for the instance to be deleted.
 
         referral_text_box = WebDriverWait(driver, WAIT_TIME).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, 'input[data-automation-id="referral"]'))
@@ -350,18 +350,16 @@ class WalmartJobApplication:
         pass
 
     def fill_experiences_and_languages(self, driver):
-        
         # Filling the experiences.
         self.fill_experiences(driver)
 
         # Filling the languages.
-        self.fill_languages(driver)
+        self.fill_languages(driver) # This step is optional, so we can skip if needed.
 
         # Submitting the information.
         self.save_and_continue(driver)
 
     def fill_application_questions_1(self, driver):
-        
         # WebDriverWait(driver, WAIT_TIME).until(
         #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
         # )
@@ -376,6 +374,9 @@ class WalmartJobApplication:
         sleep(SHORT_SLEEP_TIME)
 
         sleep(SLEEP_TIME)
+
+        # Submitting the information and going to the next page.
+        self.save_and_continue(driver)
 
     def fill_application_questions_2(self, driver):
         pass
@@ -408,7 +409,7 @@ class WalmartJobApplication:
 
         #region Fills the data in the empty containers.
 
-        for field in fields.values():
+        for field_name, field in fields.items():
             element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'[data-automation-id="{ field["location"] }"]')))
 
             if field['type'] == 'text':
@@ -456,27 +457,47 @@ class WalmartJobApplication:
                     element.click()
 
             elif field['type'] == 'date':
-                element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]')))
+                element = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]'))) # Expecting two objects at least from this script.
 
-                if field['value'] != 'present':
-                    element.send_keys(field['value'])
-                else:
-                    query = 'input[data-automation-id="currentlyWorkHere"]'
-                    # check_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, query)))
+                if field_name.__contains__('start'):
 
-                    # Check the check-box if not selected.
-                    # if not check_box.is_selected():
-                        # check_box.click()
+                    #region Start-Date
 
-                    self.execute_java_script(f'''
-                        var checkbox = document.querySelector('{ query }');
-                        if (checkbox && !checkbox.checked) {{
-                            checkbox.click();
-                            console.log('Checkbox is now checked!');
-                        }} else {{
-                            console.log('Checkbox was already checked.');
-                        }}
-                    ''')
+                    element = element[0]
+
+                    #endregion
+
+                elif field_name.__contains__('end'):
+
+                    #region End-Date
+
+                    element = element[1]
+
+                    if field['value'] == 'present':
+                        query = 'input[data-automation-id="currentlyWorkHere"]'
+                        # check_box = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, query)))
+
+                        # Check the check-box if not selected.
+                        # if not check_box.is_selected():
+                            # check_box.click()
+
+                        self.execute_java_script(f'''
+                            var checkbox = document.querySelector('{ query }');
+                            if (checkbox && !checkbox.checked) {{
+                                checkbox.click();
+                                console.log('Checkbox is now checked!');
+                            }} else {{
+                                console.log('Checkbox was already checked.');
+                            }}
+                        ''')
+
+                    del element
+
+                    return
+
+                    #endregion
+
+                element.send_keys(field['value'])
             
             del element
 
