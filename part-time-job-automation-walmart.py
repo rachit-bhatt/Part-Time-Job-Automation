@@ -377,6 +377,7 @@ class WalmartJobApplication:
         #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
         # )
 
+        # Waiting for the page to be loaded and rendered.
         sleep(SLEEP_TIME)
 
         json_data = self.load_json(self.json_path)
@@ -384,14 +385,30 @@ class WalmartJobApplication:
         # Getting focused element to answer the questions based on key-press events.
         active_element = driver.switch_to.active_element
 
-        for question_instance in json_data['application_questions_1'].values():
+        for question_instance in json_data['application_questions'].items():
             active_element = self.tab_and_type(driver, active_element, question_instance['value'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
 
     def fill_application_questions_2(self, driver):
-        pass
+
+        # Waiting for the page to be loaded and rendered.
+        sleep(SLEEP_TIME)
+
+        # Locate the checkboxes
+        checkboxes = driver.find_elements_by_css_selector("input[type='checkbox']")
+
+        # Simulate key presses (Tab to move focus, Space to toggle checkboxes)
+        for checkbox in checkboxes:
+            if "None" not in checkbox.get_attribute("aria-label"):
+                checkbox.send_keys(Keys.TAB)
+                sleep(SHORT_SLEEP_TIME)  # A few seconds delay
+                checkbox.send_keys(Keys.SPACE)
+                sleep(SHORT_SLEEP_TIME)  # A few seconds delay
+
+        # Submitting the information and going to the next page.
+        self.save_and_continue(driver)
 
     #region Automative Form Filling
 
