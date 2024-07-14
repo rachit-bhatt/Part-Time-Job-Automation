@@ -357,15 +357,20 @@ class WalmartJobApplication:
         # Submitting the information.
         self.save_and_continue(driver)
 
-    def tab_and_type(self, driver, key : str | Keys):
+    def tab_and_type(self, driver, active_element, key : str | Keys):
 
-        driver.send_keys(Keys.TAB)
+        # Going to the first question.
+        active_element.send_keys(Keys.TAB)
+        sleep(SHORT_SLEEP_TIME) # Delay for smooth working.
 
-        sleep(SHORT_SLEEP_TIME)
+        # Selecting the active element which is currently on focus.
+        active_element = driver.switch_to.active_element
 
-        driver.send_keys(key)
+        # Answering first question.
+        active_element.send_keys(key)
+        sleep(SHORT_SLEEP_TIME)  # 2-second delay
 
-        sleep(SHORT_SLEEP_TIME)
+        return active_element
 
     def fill_application_questions_1(self, driver):
         # WebDriverWait(driver, WAIT_TIME).until(
@@ -376,7 +381,11 @@ class WalmartJobApplication:
 
         json_data = self.load_json(self.json_path)
 
-        self.fill_form(driver, json_data['application_questions_1'])
+        # Getting focused element to answer the questions based on key-press events.
+        active_element = driver.switch_to.active_element
+
+        for question_instance in json_data['application_questions_1'].values():
+            active_element = self.tab_and_type(driver, active_element, question_instance['value'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
@@ -505,58 +514,6 @@ class WalmartJobApplication:
 
                 element.send_keys(field['value'])
 
-            elif field['type'] == 'qna':
-                # Element's Parent's Input Tag.
-                # Structure:
-                # - Parent
-                #   - Element
-                #   - Input Tag
-
-                # Execute JavaScript to get the next sibling
-                # next_sibling = driver.execute_script("return arguments[0].nextElementSibling;", element)
-
-                # Assigning the actual value of the application question in the drop-down.
-                # driver.execute_script("arguments[0].value = arguments[1];", element, field['value']) # For Button Tag.
-                # driver.execute_script("arguments[0].text = arguments[1];", element, field['context']) # For Button Text.
-                # driver.execute_script("arguments[0].value = arguments[1];", next_sibling, field['value']) # For Input Tag.
-
-                # Simulate tabbing and key presses
-                active_element = driver.switch_to.active_element
-
-                #region Question 1
-
-                # Going to the first question.
-                active_element.send_keys(Keys.TAB)
-                sleep(SHORT_SLEEP_TIME)
-
-                # Selecting the active element which is currently on focus.
-                active_element = driver.switch_to.active_element
-
-                # Answering first question.
-                active_element.send_keys('Y')
-                sleep(SHORT_SLEEP_TIME)  # 2-second delay
-
-                #endregion
-
-                #region Question 2
-
-                # Answering second question.
-                active_element.send_keys(Keys.TAB)
-                sleep(SHORT_SLEEP_TIME)
-
-                # Selecting the active element which is currently on focus.
-                active_element = driver.switch_to.active_element
-
-                # Simulate pressing 'O'
-                active_element.send_keys('O')
-                sleep(SHORT_SLEEP_TIME)
-
-                #endregion
-
-                # Simulate pressing Tab
-                active_element.send_keys(Keys.TAB)
-                sleep(SHORT_SLEEP_TIME)
-            
             del element
 
         #endregion
