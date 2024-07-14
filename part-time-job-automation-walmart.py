@@ -315,29 +315,27 @@ class WalmartJobApplication:
         # Fetching all of the previous experiences' objects already available in the form.
         experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
-        if len(experience_elements) != len(json_data['employment_history']):
+        # Remove all and then add one-by-one.
+        for _ in experience_elements:
 
-            # Remove all and then add one-by-one.
-            for _ in experience_elements:
+            # Clicking the delete button for each of the job experiences already present on the web-page.
+            WebDriverWait(driver, WAIT_TIME).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="panel-set-delete-button"]'))
+            ).click()
 
-                # Clicking the delete button for each of the job experiences already present on the web-page.
-                WebDriverWait(driver, WAIT_TIME).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-automation-id="panel-set-delete-button"]'))
-                ).click()
+        sleep(SHORT_SLEEP_TIME) # Waiting for the page to get loaded with the fresh UI.
 
-            sleep(SHORT_SLEEP_TIME) # Waiting for the page to get loaded with the fresh UI.
+        # Adding number of experiences forms as the number of for experiences.
+        for _ in json_data['employment_history']:
 
-            # Adding number of experiences forms as the number of for experiences.
-            for _ in json_data['employment_history']:
+            WebDriverWait(driver, WAIT_TIME).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[data-automation-id="Add"], button[data-automation-id="Add Another"]'))
+            ).click()
 
-                WebDriverWait(driver, WAIT_TIME).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'button[data-automation-id="Add"], button[data-automation-id="Add Another"]'))
-                ).click()
+        sleep(SHORT_SLEEP_TIME) # Waiting for a short break for letting the UI be loaded.
 
-            sleep(SHORT_SLEEP_TIME) # Waiting for a short break for letting the UI be loaded.
-
-            # Again, getting the objects to manipuate the data to the latest sources/ids.
-            experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
+        # Again, getting the objects to manipuate the data to the latest sources/ids.
+        experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
 
         # Iterate over each experience to fill it in the form.
         for experience_index in range(len(json_data['employment_history'])):
