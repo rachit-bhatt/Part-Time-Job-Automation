@@ -296,6 +296,9 @@ class WalmartJobApplication:
 
         #endregion
 
+        # Going to the next page to fill other details of the form.
+        self.save_and_continue(driver)
+
     def fill_experiences(self, driver):
         
         # Waiting for the page to load the content.
@@ -303,7 +306,7 @@ class WalmartJobApplication:
             EC.presence_of_element_located((By.CSS_SELECTOR, 'h2[class="css-1j9bnzb"]'))
         )
 
-        # Waiting for hte page-content to be loaded as the changes will take a while to be loaded.
+        # Waiting for the page-content to be loaded as the changes will take a while to be loaded.
         # This depends on the internet speed on the system/network running.
         sleep(SLEEP_TIME)
 
@@ -478,8 +481,6 @@ class WalmartJobApplication:
             del element
 
         #endregion
-
-        self.save_and_continue(driver)
 
     #endregion
 
