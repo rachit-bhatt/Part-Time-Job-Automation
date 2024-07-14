@@ -430,6 +430,11 @@ class WalmartJobApplication:
                 sleep(SHORT_SLEEP_TIME)
 
             else:
+                # Tabbing back because there will be an extra tabs for this input.
+                active_element.send_keys(Keys.SHIFT + Keys.TAB)
+                active_element = driver.switch_to.active_element
+
+                # Selecting the option from the dropdown.
                 self.tab_and_type(driver, active_element, question_instance['context'])
 
         # Submitting the information and going to the next page.
