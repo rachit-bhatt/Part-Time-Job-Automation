@@ -504,8 +504,12 @@ class WalmartJobApplication:
                 element.send_keys(field['value'])
 
             elif field['type'] == 'qna':
-
-                input_element = element.parent.get_attribute((By.TAG_NAME, 'input'))
+                # Element's Parent's Input Tag.
+                # Structure:
+                # - Parent
+                #   - Element
+                #   - Input Tag
+                input_element = element.find_element(By.XPATH, '..').get_attribute((By.TAG_NAME, 'input'))
 
                 driver.execute_script("arguments[0].value = arguments[1];", input_element, field['value'])
             
