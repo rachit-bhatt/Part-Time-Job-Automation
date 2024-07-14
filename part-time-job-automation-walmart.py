@@ -512,46 +512,6 @@ class WalmartJobApplication:
                 #   - Element
                 #   - Input Tag
 
-                driver.execute_script('''
-                                      // Execute this script when the page loads
-                                      window.addEventListener('load', function() {
-                                        // Simulate key presses
-                                        // Move to the next input field (e.g., by pressing Tab)
-                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
-                                      
-                                        // Selecting first key.
-                                        document.activeElement.value = 'Y'; // Set the value directly on the currently focused element
-                                        document.activeElement.dispatchEvent(new Event('input')); // Trigger an input event (optional)
-
-                                        // Move to the next input field (e.g., by pressing Tab)
-                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
-
-                                        // Simulate key presses for the second input field
-                                        document.activeElement.value = 'O';
-                                        document.activeElement.dispatchEvent(new Event('input'));
-
-                                        // Move to the next input field
-                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
-
-                                        // Set the contact number
-                                        document.activeElement.value = '1231231231';
-                                        document.activeElement.dispatchEvent(new Event('input'));
-
-                                        // Move to the next input field
-                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
-
-                                        // Simulate key presses for the next input field (e.g., 'A')
-                                        document.activeElement.value = 'A';
-                                        document.activeElement.dispatchEvent(new Event('input'));
-
-                                        // ... Repeat for other input fields
-
-                                        // Optionally, trigger any necessary events (e.g., change event for dropdowns)
-                                        // Example:
-                                        // document.querySelector('select#your-dropdown').dispatchEvent(new Event('change'));
-                                    });
-                ''')
-
                 # Execute JavaScript to get the next sibling
                 # next_sibling = driver.execute_script("return arguments[0].nextElementSibling;", element)
 
@@ -559,6 +519,43 @@ class WalmartJobApplication:
                 # driver.execute_script("arguments[0].value = arguments[1];", element, field['value']) # For Button Tag.
                 # driver.execute_script("arguments[0].text = arguments[1];", element, field['context']) # For Button Text.
                 # driver.execute_script("arguments[0].value = arguments[1];", next_sibling, field['value']) # For Input Tag.
+
+                # Simulate tabbing and key presses
+                active_element = driver.switch_to.active_element
+
+                #region Question 1
+
+                # Going to the first question.
+                active_element.send_keys(Keys.TAB)
+                sleep(SHORT_SLEEP_TIME)
+
+                # Selecting the active element which is currently on focus.
+                active_element = driver.switch_to.active_element
+
+                # Answering first question.
+                active_element.send_keys('Y')
+                sleep(SHORT_SLEEP_TIME)  # 2-second delay
+
+                #endregion
+
+                #region Question 2
+
+                # Answering second question.
+                active_element.send_keys(Keys.TAB)
+                sleep(SHORT_SLEEP_TIME)
+
+                # Selecting the active element which is currently on focus.
+                active_element = driver.switch_to.active_element
+
+                # Simulate pressing 'O'
+                active_element.send_keys('O')
+                sleep(SHORT_SLEEP_TIME)
+
+                #endregion
+
+                # Simulate pressing Tab
+                active_element.send_keys(Keys.TAB)
+                sleep(SHORT_SLEEP_TIME)
             
             del element
 
