@@ -368,10 +368,20 @@ class WalmartJobApplication:
         sleep(SLEEP_TIME)
 
         body = driver.find_element(By.TAG_NAME, 'body')
+
+        sleep(SLEEP_TIME)
+
+        #region Question 1
+
         body.send_keys(Keys.TAB)
+
         sleep(SHORT_SLEEP_TIME)
+
         body.send_keys('Y')
+
         sleep(SHORT_SLEEP_TIME)
+
+        #endregion
 
         sleep(SLEEP_TIME)
 
