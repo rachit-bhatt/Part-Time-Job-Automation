@@ -370,6 +370,9 @@ class WalmartJobApplication:
         active_element.send_keys(key)
         sleep(SHORT_SLEEP_TIME)  # 2-second delay
 
+        # Selecting the active element which is currently on focus.
+        active_element = driver.switch_to.active_element
+
         return active_element
 
     def fill_application_questions_1(self, driver):
@@ -412,6 +415,7 @@ class WalmartJobApplication:
         sleep(SHORT_SLEEP_TIME)
         active_element.send_keys(Keys.TAB) # Going to the ghost element to focus on the first check-box using the function.
         sleep(SHORT_SLEEP_TIME)
+        active_element = driver.switch_to.active_element
 
         for week_key, question_instance in json_data['application_questions_2'].items():
 
