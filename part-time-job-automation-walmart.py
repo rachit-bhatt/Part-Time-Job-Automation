@@ -372,6 +372,8 @@ class WalmartJobApplication:
         #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
         # )
 
+        sleep(SLEEP_TIME)
+
         json_data = self.load_json(self.json_path)
 
         self.fill_form(driver, json_data['application_questions_1'])
@@ -510,14 +512,53 @@ class WalmartJobApplication:
                 #   - Element
                 #   - Input Tag
 
-                # parent_element = element.find_element(By.XPATH, '..')
-                # input_element = parent_element.get_attribute((By.TAG_NAME, 'input'))
+                driver.execute_script('''
+                                      // Execute this script when the page loads
+                                      window.addEventListener('load', function() {
+                                        // Simulate key presses
+                                        // Move to the next input field (e.g., by pressing Tab)
+                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+                                      
+                                        // Selecting first key.
+                                        document.activeElement.value = 'Y'; // Set the value directly on the currently focused element
+                                        document.activeElement.dispatchEvent(new Event('input')); // Trigger an input event (optional)
+
+                                        // Move to the next input field (e.g., by pressing Tab)
+                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+
+                                        // Simulate key presses for the second input field
+                                        document.activeElement.value = 'O';
+                                        document.activeElement.dispatchEvent(new Event('input'));
+
+                                        // Move to the next input field
+                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+
+                                        // Set the contact number
+                                        document.activeElement.value = '1231231231';
+                                        document.activeElement.dispatchEvent(new Event('input'));
+
+                                        // Move to the next input field
+                                        document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+
+                                        // Simulate key presses for the next input field (e.g., 'A')
+                                        document.activeElement.value = 'A';
+                                        document.activeElement.dispatchEvent(new Event('input'));
+
+                                        // ... Repeat for other input fields
+
+                                        // Optionally, trigger any necessary events (e.g., change event for dropdowns)
+                                        // Example:
+                                        // document.querySelector('select#your-dropdown').dispatchEvent(new Event('change'));
+                                    });
+                ''')
 
                 # Execute JavaScript to get the next sibling
-                next_sibling = driver.execute_script("return arguments[0].nextElementSibling;", element)
+                # next_sibling = driver.execute_script("return arguments[0].nextElementSibling;", element)
 
                 # Assigning the actual value of the application question in the drop-down.
-                driver.execute_script("arguments[0].value = arguments[1];", next_sibling, field['value'])
+                # driver.execute_script("arguments[0].value = arguments[1];", element, field['value']) # For Button Tag.
+                # driver.execute_script("arguments[0].text = arguments[1];", element, field['context']) # For Button Text.
+                # driver.execute_script("arguments[0].value = arguments[1];", next_sibling, field['value']) # For Input Tag.
             
             del element
 
