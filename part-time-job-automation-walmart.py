@@ -354,7 +354,7 @@ class WalmartJobApplication:
         self.fill_experiences(driver)
 
         # Filling the languages.
-        self.fill_languages(driver) # This step is optional, so we can skip if needed.
+        self.fill_languages(driver) # This step is optional and skippable.
 
         # Submitting the information.
         self.save_and_continue(driver)
@@ -459,7 +459,7 @@ class WalmartJobApplication:
             elif field['type'] == 'date':
                 element = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, f'input[data-automation-id="{ field["location"] }"]'))) # Expecting two objects at least from this script.
 
-                if field_name.__contains__('start'):
+                if field_name[ : 5] == 'start':
 
                     #region Start-Date
 
@@ -467,7 +467,7 @@ class WalmartJobApplication:
 
                     #endregion
 
-                elif field_name.__contains__('end'):
+                elif field_name[ : 3] == 'end':
 
                     #region End-Date
 
@@ -491,9 +491,9 @@ class WalmartJobApplication:
                             }}
                         ''')
 
-                    del element
+                        del element
 
-                    return
+                        return
 
                     #endregion
 
