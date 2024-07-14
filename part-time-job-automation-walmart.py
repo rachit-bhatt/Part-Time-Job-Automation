@@ -509,9 +509,15 @@ class WalmartJobApplication:
                 # - Parent
                 #   - Element
                 #   - Input Tag
-                input_element = element.find_element(By.XPATH, '..').get_attribute((By.TAG_NAME, 'input'))
 
-                driver.execute_script("arguments[0].value = arguments[1];", input_element, field['value'])
+                # parent_element = element.find_element(By.XPATH, '..')
+                # input_element = parent_element.get_attribute((By.TAG_NAME, 'input'))
+
+                # Execute JavaScript to get the next sibling
+                next_sibling = driver.execute_script("return arguments[0].nextElementSibling;", element)
+
+                # Assigning the actual value of the application question in the drop-down.
+                driver.execute_script("arguments[0].value = arguments[1];", next_sibling, field['value'])
             
             del element
 
