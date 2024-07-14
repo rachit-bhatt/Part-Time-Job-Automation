@@ -373,9 +373,6 @@ class WalmartJobApplication:
         return active_element
 
     def fill_application_questions_1(self, driver):
-        # WebDriverWait(driver, WAIT_TIME).until(
-        #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
-        # )
 
         # Waiting for the page to be loaded and rendered.
         sleep(SLEEP_TIME)
@@ -385,7 +382,7 @@ class WalmartJobApplication:
         # Getting focused element to answer the questions based on key-press events.
         active_element = driver.switch_to.active_element
 
-        for question_instance in json_data['application_questions'].items():
+        for question_instance in json_data['application_questions'].values():
             active_element = self.tab_and_type(driver, active_element, question_instance['value'])
 
         # Submitting the information and going to the next page.
