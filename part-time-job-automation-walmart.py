@@ -357,6 +357,16 @@ class WalmartJobApplication:
         # Submitting the information.
         self.save_and_continue(driver)
 
+    def tab_and_type(self, driver, key : str | Keys):
+
+        driver.send_keys(Keys.TAB)
+
+        sleep(SHORT_SLEEP_TIME)
+
+        driver.send_keys(key)
+
+        sleep(SHORT_SLEEP_TIME)
+
     def fill_application_questions_1(self, driver):
         # WebDriverWait(driver, WAIT_TIME).until(
         #     EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Application Questions 1 of 2')]"))
@@ -371,17 +381,17 @@ class WalmartJobApplication:
 
         #region Question 1
 
-        body.send_keys(Keys.TAB)
-
-        sleep(SHORT_SLEEP_TIME)
-
-        body.send_keys('Y')
-
-        sleep(SHORT_SLEEP_TIME)
+        self.tab_and_type(body, 'Y')
 
         #endregion
 
-        sleep(SLEEP_TIME)
+        #region Question 2
+
+        self.tab_and_type(body, 'O')
+
+        #endregion
+
+        # sleep(SLEEP_TIME)
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
