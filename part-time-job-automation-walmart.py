@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Constants
-WAIT_TIME = 10  # Common wait time.
+WAIT_TIME = 300  # Common wait time.
 SLEEP_TIME = 5  # Common sleep time.
 SHORT_SLEEP_TIME = 2  # Common short sleep time.
 
@@ -604,6 +604,8 @@ class WalmartJobApplication:
         self.delete_missing_resume_log(self.log_path)
 
         driver = self.login()
+
+        self.search_jobs(driver)
 
         # Iterate through job listings and open each job in a new tab
         job_listings = WebDriverWait(driver, WAIT_TIME).until(
