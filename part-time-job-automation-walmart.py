@@ -422,8 +422,8 @@ class WalmartJobApplication:
             # Switching between dropdown and checkboxes.
             if week_key != "Overall":
 
-                for day_data in question_instance.values():
-                    active_element = self.tab_and_type(driver, active_element, (Keys.SPACE if day_data else Keys.TAB))
+                for day, day_data in question_instance.items():
+                    active_element = self.tab_and_type(driver, active_element, (Keys.SPACE if day_data else (Keys.TAB if day == "None" else '')))
 
                 # Tabbing to move to the next day.
                 active_element.send_keys(Keys.TAB)
@@ -436,6 +436,17 @@ class WalmartJobApplication:
 
                 # Selecting the option from the dropdown.
                 self.tab_and_type(driver, active_element, question_instance['context'])
+
+        # Submitting the information and going to the next page.
+        self.save_and_continue(driver)
+
+    def terms_and_conditions_acceptance(self, driver):
+
+        # Loading the agreement data from the JSON file.
+        json_data = self.load_json(self.json_path)
+        
+        # Filling the agreements as requested in the form.
+        self.fill_form(driver, json_data['agreements'])
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
@@ -512,8 +523,10 @@ class WalmartJobApplication:
                 # )
                 # option.click()
                 #endregion
+
             elif field['type'] == 'radio':
                 element.click()
+
             elif field['type'] == 'checkbox':
                 if not element.is_selected():
                     element.click()
@@ -586,6 +599,7 @@ class WalmartJobApplication:
         self.fill_experiences_and_languages(driver)
         self.fill_application_questions_1(driver)
         self.fill_application_questions_2(driver)
+        self.terms_and_conditions_acceptance(driver)
         return None
         #endregion
         
