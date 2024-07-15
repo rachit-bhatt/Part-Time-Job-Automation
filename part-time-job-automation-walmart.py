@@ -182,6 +182,16 @@ class WalmartJobApplication:
         if self.resume_file:
             self.uploading_resume(driver)
             self.choose_personal_details(driver)
+
+            self.fill_experiences_and_languages(driver)
+
+            self.fill_application_questions_1(driver)
+            self.fill_application_questions_2(driver)
+
+            self.terms_and_conditions_acceptance(driver)
+
+            # Submitting the information and going to the next page.
+            self.save_and_continue(driver)
         else:
             log_message = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Resume file not found before uploading!\n"
             with open(self.log_path, 'a') as log_file:
@@ -590,28 +600,6 @@ class WalmartJobApplication:
 
         driver = self.login()
 
-        #region Debug
-        # self.search_jobs(driver)
-        driver.get('https://walmart.wd5.myworkdayjobs.com/en-US/WalmartExternal/job/Toronto-(Stockyards)%2C-ON/XMLNAME--CAN--Stock-Unloader-Associate_R-1905256-1/apply/autofillWithResume?q=Stock')
-
-        self.resume_file = 'Stock Unloader Associate.pdf'
-        self.uploading_resume(driver)
-
-        self.choose_personal_details(driver)
-
-        self.fill_experiences_and_languages(driver)
-
-        self.fill_application_questions_1(driver)
-        self.fill_application_questions_2(driver)
-
-        self.terms_and_conditions_acceptance(driver)
-
-        # Submitting the information and going to the next page.
-        self.save_and_continue(driver)
-
-        return None
-        #endregion
-        
         # Iterate through job listings and open each job in a new tab
         job_listings = WebDriverWait(driver, WAIT_TIME).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'ul[aria-label^="Page"] > li'))
