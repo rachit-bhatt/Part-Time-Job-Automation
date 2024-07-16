@@ -177,11 +177,28 @@ class WalmartJobApplication:
 
     def apply_job(self, driver):
 
+        is_resume_needed = True
+
+        #region Fresh Application
+
+        try:
+            # Click the "Apply" button
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
+        except TimeoutException as te: # This means the application might be already filled partially in the past.
+            # Re-Fill The Whole Form.
+            print(te)
+            is_resume_needed = False
+
+        #endregion
+
+        #region Continuing Old Application
+
         try:
             # Click the "Apply" button
             WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"], a[data-automation-id="continueButton"]'))).click()
-        except TimeoutException as te: # This means the application might be already filled in past.
+        except TimeoutException as te: # This means the application might be already filled in the past.
             # Ignore such applications.
+            print(te)
             return
 
         # Click the "Autofill with Resume" button
@@ -189,7 +206,11 @@ class WalmartJobApplication:
 
         # Validator: When the appropriate resume is available, fill the form.
         if self.resume_file:
-            self.uploading_resume(driver)
+
+            # Saving a timeout exception for not uploading the resume when continuing the application.
+            if is_resume_needed:
+                self.uploading_resume(driver)
+
             self.choose_personal_details(driver)
 
             self.fill_experiences_and_languages(driver)
