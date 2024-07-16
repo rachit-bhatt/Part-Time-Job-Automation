@@ -138,7 +138,11 @@ class WalmartJobApplication:
             print(f"Applying to { job_title } using { matching_resume }")
 
             # Implement application process (form filling, submission, etc.)
-            self.apply_job(driver)
+            try:
+                self.apply_job(driver)
+            except TimeoutException as te: # This means the application might be already filled in past.
+                # Ignore such applications.
+                return
 
         driver.close()
         driver.switch_to.window(current_window)
@@ -175,7 +179,7 @@ class WalmartJobApplication:
 
         try:
             # Click the "Apply" button
-            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"]'))).click()
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"], a[data-automation-id="continueButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled in past.
             # Ignore such applications.
             return
