@@ -639,8 +639,6 @@ class WalmartJobApplication:
 
         for job in job_listings:
 
-            sleep(SLEEP_TIME) # Waiting for the page to get loaded.
-
             try:
                 # Finding the section (li element) having job details.
                 job_title_element = job.find_element(By.CSS_SELECTOR, 'a[data-automation-id="jobTitle"]')
