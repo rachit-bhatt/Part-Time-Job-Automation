@@ -7,7 +7,7 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -639,15 +639,22 @@ class WalmartJobApplication:
 
         for job in job_listings:
 
-            # Finding the section (li element) having job details.
-            job_title_element = job.find_element(By.CSS_SELECTOR, 'a[data-automation-id="jobTitle"]')
+            sleep(SLEEP_TIME) # Waiting for the page to get loaded.
 
-            # Pulling out the Job-Title and the Job-Link to apply for it.
-            job_title = job_title_element.text
-            job_link = job_title_element.get_attribute('href')
+            try:
+                # Finding the section (li element) having job details.
+                job_title_element = job.find_element(By.CSS_SELECTOR, 'a[data-automation-id="jobTitle"]')
 
-            # Opening the tab in the new window.
-            self.open_job_in_new_tab(driver, job_title, job_link)
+                # Pulling out the Job-Title and the Job-Link to apply for it.
+                job_title = job_title_element.text
+                job_link = job_title_element.get_attribute('href')
+
+                # Opening the tab in the new window.
+                self.open_job_in_new_tab(driver, job_title, job_link)
+
+            except NoSuchElementException as nsee:
+                # If we don't find the title, there must be some bug on the web portal and not our fault.
+                print(nsee) # So, simply ignore it and move on to the next job position posted.
 
         # Close the driver session
         driver.quit()
