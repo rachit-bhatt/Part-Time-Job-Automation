@@ -229,11 +229,14 @@ class WalmartJobApplication:
             self.terms_and_conditions_acceptance(driver)
 
             # Final Review Page takes time to get loaded.
-            sleep(WAIT_TIME)
+            sleep(SLEEP_TIME)
 
             # Submitting the information and going to the next page.
             print('Reviewing and Submitting.')
             self.save_and_continue(driver)
+
+            # Waiting for the UI to submit the form.
+            sleep(SLEEP_TIME)
         else:
             log_message = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Resume file not found before uploading!\n"
             with open(self.log_path, 'a') as log_file:
