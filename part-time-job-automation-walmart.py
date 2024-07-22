@@ -183,9 +183,9 @@ class WalmartJobApplication:
 
         try:
             # Click the "Apply" button
-            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled partially in the past.
-            # Re-Fill The Whole Form.
+            # Ignore such applications.
             is_resume_needed = False
             print(f'Uploading Resume: { is_resume_needed }.\n', te)
 
@@ -194,11 +194,11 @@ class WalmartJobApplication:
         #region Continuing Old Application
 
         try:
-            # Click the "Apply" button
-            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"]'))).click()
+            # Click the "Continue Application" button
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled in the past.
-            # Ignore such applications.
-            print(f'Uploading Resume: { is_resume_needed }.\n', te)
+            # Re-Fill The Whole Form.
+            print('Can\'t find the Continue Application button either.\nSomething went wrong!\n', te)
             return
 
         if is_resume_needed:
