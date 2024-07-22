@@ -228,6 +228,9 @@ class WalmartJobApplication:
             print('Accepting Terms and Conditions.')
             self.terms_and_conditions_acceptance(driver)
 
+            # Final Review Page takes time to get loaded.
+            sleep(WAIT_TIME)
+
             # Submitting the information and going to the next page.
             print('Reviewing and Submitting.')
             self.save_and_continue(driver)
@@ -388,7 +391,12 @@ class WalmartJobApplication:
 
         # Iterate over each experience to fill it in the form.
         for experience_index in range(len(json_data['employment_history'])):
-            self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
+            try:
+                self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
+            except IndexError as ie:
+                print(ie)
+                experience_elements = driver.find_elements(By.XPATH, "//div[starts-with(@data-automation-id, 'workExperience-')]")
+                self.fill_form(experience_elements[experience_index], json_data['employment_history'][experience_index])
 
     def execute_java_script(self, java_script):
         self.executable_driver.execute_script(java_script)
@@ -496,6 +504,9 @@ class WalmartJobApplication:
         
         # Filling the agreements as requested in the form.
         self.fill_form(driver, json_data['agreements'])
+
+        # Waiting for the UI to get updated.
+        sleep(SHORT_SLEEP_TIME)
 
         # Submitting the information and going to the next page.
         self.save_and_continue(driver)
