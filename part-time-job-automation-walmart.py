@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 # Constants
-WAIT_TIME = 300  # Common wait time.
+WAIT_TIME = 30  # Common wait time.
 SLEEP_TIME = 5  # Common sleep time.
 SHORT_SLEEP_TIME = 2  # Common short sleep time.
 
@@ -186,8 +186,8 @@ class WalmartJobApplication:
             WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled partially in the past.
             # Re-Fill The Whole Form.
-            print(te)
             is_resume_needed = False
+            print(f'Uploading Resume: { is_resume_needed }.\n', te)
 
         #endregion
 
@@ -195,32 +195,40 @@ class WalmartJobApplication:
 
         try:
             # Click the "Apply" button
-            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"], a[data-automation-id="continueButton"]'))).click()
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="adventureButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled in the past.
             # Ignore such applications.
-            print(te)
+            print(f'Uploading Resume: { is_resume_needed }.\n', te)
             return
 
-        # Click the "Autofill with Resume" button
-        WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="autofillWithResume"]'))).click()
+        if is_resume_needed:
+            # Click the "Autofill with Resume" button
+            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="autofillWithResume"]'))).click()
 
         # Validator: When the appropriate resume is available, fill the form.
         if self.resume_file:
 
             # Saving a timeout exception for not uploading the resume when continuing the application.
             if is_resume_needed:
+                print('Uploading the Resume.')
                 self.uploading_resume(driver)
 
+            print('Filling Personal Details.')
             self.choose_personal_details(driver)
 
+            print('Filling Experiences.')
             self.fill_experiences_and_languages(driver)
 
+            print('Filling Application Questions 1.')
             self.fill_application_questions_1(driver)
+            print('Filling Application Questions 2.')
             self.fill_application_questions_2(driver)
 
+            print('Accepting Terms and Conditions.')
             self.terms_and_conditions_acceptance(driver)
 
             # Submitting the information and going to the next page.
+            print('Reviewing and Submitting.')
             self.save_and_continue(driver)
         else:
             log_message = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Resume file not found before uploading!\n"
