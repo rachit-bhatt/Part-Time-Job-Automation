@@ -194,8 +194,9 @@ class WalmartJobApplication:
         #region Continuing Old Application
 
         try:
-            # Click the "Continue Application" button
-            WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
+            if not is_resume_needed:
+                # Click the "Continue Application" button
+                WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'a[data-automation-id="continueButton"]'))).click()
         except TimeoutException as te: # This means the application might be already filled in the past.
             # Re-Fill The Whole Form.
             print('Can\'t find the Continue Application button either.\nSomething went wrong!\n', te)
